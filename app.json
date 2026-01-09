@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "YoursTrulyCare",
+    "slug": "yours-truly-care",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/yours-truly-care-logo.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#EAF6EF"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundColor": "#E6F4FE"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
+  }
+}
