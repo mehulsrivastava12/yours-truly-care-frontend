@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-export const API_BASE_URL = "http://192.168.29.17:8080/api";
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL!;
 
 /* =========================
    PUBLIC APIs (NO JWT)

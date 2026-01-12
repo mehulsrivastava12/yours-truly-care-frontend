@@ -39,8 +39,7 @@ const redirectUri = AuthSession.makeRedirectUri({
   const valid = mobile.length === 10;
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId:
-      "796471745250-t4rvbm990pc38pgck0l8tfm9mrpv0bmg.apps.googleusercontent.com",
+    clientId:process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
     redirectUri,
     // scopes: ["openid", "profile", "email"],
   });
