@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "YoursTrulyCare",
+    "scheme": "yourstrulycare",
     "slug": "yours-truly-care",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,12 +12,14 @@
       "backgroundColor": "#EAF6EF"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mehulsri.yourstrulycare"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundColor": "#E6F4FE"
+        "backgroundColor": "#E6F4FE",
+        "package": "com.mehulsri.yourstrulycare"
       }
     },
     "plugins": [

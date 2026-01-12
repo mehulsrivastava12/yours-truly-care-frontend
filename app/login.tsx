@@ -1,7 +1,11 @@
 import { sendOtpApi } from "@/app/utils/api";
+import * as AuthSession from "expo-auth-session";
+import * as Google from "expo-auth-session/providers/google";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import * as SecureStore from "expo-secure-store";
+import * as WebBrowser from "expo-web-browser";
+import { useEffect, useState } from "react";
 import {
     Alert,
     Image,
@@ -12,8 +16,10 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View
+    View,
 } from "react-native";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,8 +31,60 @@ export default function LoginScreen() {
     if (digits.length <= 10) setMobile(digits);
   };
 
+//   const redirectUri = "https://auth.expo.io/@mehulsri/yours-truly-care";
+const redirectUri = AuthSession.makeRedirectUri({
+  scheme: "yourstrulycare",
+});
+
   const valid = mobile.length === 10;
 
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId:
+      "796471745250-t4rvbm990pc38pgck0l8tfm9mrpv0bmg.apps.googleusercontent.com",
+    redirectUri,
+    // scopes: ["openid", "profile", "email"],
+  });
+
+    useEffect(() => {
+    console.log("Response Type:", response?.type);
+    if (response?.type === "success") {
+        // Check both locations for the token
+        const idToken = response.authentication?.idToken || response.params?.id_token;
+
+        if (!idToken) {
+        console.error("❌ No ID Token found in response:", response);
+        Alert.alert("Login failed", "No ID token received");
+        return;
+        }
+
+        console.log("✅ Token found, hitting backend...");
+        loginWithGoogle(idToken);
+    }
+    }, [response]);
+
+  async function loginWithGoogle(idToken: string) {
+    try {
+      const res = await fetch("http://192.168.29.17:8080/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Google login failed");
+      }
+
+      const { token } = await res.json();
+
+      await SecureStore.setItemAsync("auth_token", token);
+
+      router.replace("(tabs)");
+    } catch (e) {
+      Alert.alert("Error", "Google login failed. Try again.");
+    }
+  }
   return (
     <LinearGradient colors={["#EAF6EF", "#FFFFFF"]} style={{ flex: 1 }}>
       <KeyboardAvoidingView
@@ -54,9 +112,9 @@ export default function LoginScreen() {
               <Text style={styles.countryCode}>+91</Text>
               <TextInput
                 placeholder="Mobile Number"
+                placeholderTextColor="#7A7A7A"
                 style={styles.mobileInput}
                 keyboardType="number-pad"
-                placeholderTextColor="#7A7A7A"
                 value={mobile}
                 onChangeText={handleMobileChange}
                 maxLength={10}
@@ -64,34 +122,24 @@ export default function LoginScreen() {
             </View>
 
             {/* OTP BUTTON */}
-            {/* <TouchableOpacity
-              disabled={!valid}
-              style={[styles.button, !valid && styles.disabled]}
-              onPress={() =>
-                router.push({ pathname: "/otp", params: { mobile } })
-              }
-            >
-              <Text style={styles.buttonText}>GET OTP</Text>
-            </TouchableOpacity> */}
-
             <TouchableOpacity
-            disabled={!valid || loading}
-            style={[styles.button, (!valid || loading) && styles.disabled]}
-            onPress={async () => {
+              disabled={!valid || loading}
+              style={[styles.button, (!valid || loading) && styles.disabled]}
+              onPress={async () => {
                 try {
-                setLoading(true);
-                await sendOtpApi(mobile);
-                router.push({ pathname: "/otp", params: { mobile } });
-                } catch (e) {
-                Alert.alert("Error", "Failed to send OTP. Please try again.");
+                  setLoading(true);
+                  await sendOtpApi(mobile);
+                  router.push({ pathname: "/otp", params: { mobile } });
+                } catch {
+                  Alert.alert("Error", "Failed to send OTP");
                 } finally {
-                setLoading(false);
+                  setLoading(false);
                 }
-            }}
+              }}
             >
-            <Text style={styles.buttonText}>
+              <Text style={styles.buttonText}>
                 {loading ? "Sending..." : "GET OTP"}
-            </Text>
+              </Text>
             </TouchableOpacity>
 
 
@@ -113,23 +161,28 @@ export default function LoginScreen() {
                   />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.socialButton}>
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  onPress={() => promptAsync()}
+                >
                   <Text style={styles.socialText}>Login Via</Text>
                   <Image
                     source={require("@/assets/images/google.png")}
                     style={styles.googleIcon}
                   />
-                  {/* <Text style={styles.socialText}>Login via Google</Text> */}
                 </TouchableOpacity>
               </View>
             ) : (
-                <TouchableOpacity style={styles.socialButton}>
-                  <Text style={styles.socialText}>Login Via</Text>
-                  <Image
-                    source={require("@/assets/images/google.png")}
-                    style={styles.googleIcon}
-                  />
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.socialButton}
+                onPress={() => promptAsync()}
+              >
+                <Text style={styles.socialText}>Login Via</Text>
+                <Image
+                  source={require("@/assets/images/google.png")}
+                  style={styles.googleIcon}
+                />
+              </TouchableOpacity>
             )}
           </View>
 
@@ -142,6 +195,11 @@ export default function LoginScreen() {
     </LinearGradient>
   );
 }
+
+/* =========================
+   STYLES
+========================= */
+
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
@@ -176,13 +234,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     elevation: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
   },
   mobileRow: {
     flexDirection: "row",
@@ -222,16 +273,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  googleOnly: {
-    height: 46,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  socialIcon: { width: 18, height: 18, marginRight: 8 },
   appleIcon: { width: 18, height: 18, marginLeft: 6 },
   googleIcon: { width: 18, height: 18, marginLeft: 6 },
   socialText: { fontSize: 13, fontWeight: "500" },
