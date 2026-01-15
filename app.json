@@ -19,12 +19,34 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundColor": "#E6F4FE",
+        "usesCleartextTraffic": true,
         "package": "com.mehulsri.yourstrulycare"
-      }
+      },
+      "package": "com.mehulsri.yourstrulycare"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.796471745250-1ll90iob49c77d1camqj1hcnrh4qf9u7"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "073e36d9-9ad8-44ef-ab0c-67fc550fb920"
+      }
+    }
   }
 }

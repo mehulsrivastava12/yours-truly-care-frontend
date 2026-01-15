@@ -1,22 +1,20 @@
 import { sendOtpApi } from "@/app/utils/api";
-import * as AuthSession from "expo-auth-session";
-import * as Google from "expo-auth-session/providers/google";
+import * as Google from 'expo-auth-session/providers/google';
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -31,59 +29,57 @@ export default function LoginScreen() {
     if (digits.length <= 10) setMobile(digits);
   };
 
-//   const redirectUri = "https://auth.expo.io/@mehulsri/yours-truly-care";
-const redirectUri = AuthSession.makeRedirectUri({
-  scheme: "yourstrulycare",
-});
+  const [userInfo, setUserInfo] = useState('')
 
   const valid = mobile.length === 10;
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId:process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
-    redirectUri,
-    // scopes: ["openid", "profile", "email"],
+    // webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID!,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID!,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!,
   });
 
     useEffect(() => {
     console.log("Response Type:", response?.type);
     if (response?.type === "success") {
         // Check both locations for the token
-        const idToken = response.authentication?.idToken || response.params?.id_token;
+        const accessToken = response.authentication?.accessToken;
 
-        if (!idToken) {
+        if (!accessToken) {
         console.error("❌ No ID Token found in response:", response);
         Alert.alert("Login failed", "No ID token received");
         return;
         }
 
         console.log("✅ Token found, hitting backend...");
-        loginWithGoogle(idToken);
+        loginWithGoogle(accessToken);
     }
     }, [response]);
-
-  async function loginWithGoogle(idToken: string) {
-    try {
-      const res = await fetch("http://192.168.29.17:8080/api/auth/google", {
-        method: "POST",
+async function loginWithGoogle(accessToken: string) {
+  try {
+    const response = await fetch(
+      "https://www.googleapis.com/userinfo/v2/me",
+      {
         headers: {
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ idToken }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Google login failed");
       }
+    );
 
-      const { token } = await res.json();
-
-      await SecureStore.setItemAsync("auth_token", token);
-
-      router.replace("(tabs)");
-    } catch (e) {
-      Alert.alert("Error", "Google login failed. Try again.");
+    if (!response.ok) {
+      throw new Error("Failed to fetch Google user info");
     }
+
+    const user = await response.json();
+
+    console.log("Google User Info:", user);
+    router.replace("/(tabs)");
+  } catch (error) {
+    console.error("Google login error:", error);
+    Alert.alert("Error", "Failed to fetch Google user info");
+    throw error;
   }
+}
   return (
     <LinearGradient colors={["#EAF6EF", "#FFFFFF"]} style={{ flex: 1 }}>
       <KeyboardAvoidingView

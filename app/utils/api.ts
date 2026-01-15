@@ -7,6 +7,7 @@ export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL!;
 ========================= */
 
 export async function sendOtpApi(mobile: string) {
+  console.log(API_BASE_URL,"API_BASE_URL")
   const response = await fetch(`${API_BASE_URL}/auth/send-otp`, {
     method: "POST",
     headers: {
