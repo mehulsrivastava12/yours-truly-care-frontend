@@ -5,7 +5,7 @@
     "slug": "yours-truly-care",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/cropped.png",
     "splash": {
       "image": "./assets/images/yours-truly-care-logo.png",
       "resizeMode": "cover",

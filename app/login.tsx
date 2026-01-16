@@ -2,6 +2,7 @@ import { sendOtpApi } from "@/app/utils/api";
 import {
   GoogleSignin
 } from '@react-native-google-signin/google-signin';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -45,6 +46,32 @@ export default function LoginScreen() {
   const [userInfo, setUserInfo] = useState('')
 
   const valid = mobile.length === 10;
+  const handleSignInApple = async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      // signed ins
+      console.log(credential);
+      if(credential.identityToken){
+        await SecureStore.setItemAsync("auth_token", credential.identityToken);
+        router.replace("/(tabs)");
+      }
+      // sample response provided below
+    } catch (e:  unknown) {
+      if(e instanceof Error){
+        if (e.message === 'ERR_REQUEST_CANCELED') {
+          // handle that the user canceled the sign-in flow
+        } else {
+          // handle other errors
+        }
+      }
+    }
+  };
+
   const GoogleLogin = async () => {
     // check if users' device has google play services
     await GoogleSignin.hasPlayServices();
@@ -164,7 +191,7 @@ export default function LoginScreen() {
             {/* SOCIAL LOGIN */}
             {Platform.OS === "ios" ? (
               <View style={styles.socialRow}>
-                <TouchableOpacity style={styles.socialButton}>
+                <TouchableOpacity style={styles.socialButton} onPress={() => handleSignInApple()}>
                   <Text style={styles.socialText}>Login Via</Text>
                   <Image
                     source={require("@/assets/images/apple.png")}
