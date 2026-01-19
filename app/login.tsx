@@ -20,7 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL!;
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -55,19 +55,25 @@ export default function LoginScreen() {
         ],
       });
       // signed ins
-      console.log(credential);
       if(credential.identityToken){
-        await SecureStore.setItemAsync("auth_token", credential.identityToken);
-        router.replace("/(tabs)");
+        const identityToken = credential.identityToken;
+        const res = await fetch(`${API_BASE_URL}/auth/apple`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({idToken: identityToken}),
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          const token = data.token;
+          const newUser = data.newUser;
+          await SecureStore.setItemAsync("auth_token",token);
+          router.replace("/(tabs)");
+        }
       }
-      // sample response provided below
     } catch (e:  unknown) {
       if(e instanceof Error){
-        if (e.message === 'ERR_REQUEST_CANCELED') {
-          // handle that the user canceled the sign-in flow
-        } else {
-          // handle other errors
-        }
+        Alert.alert("Apple Login Failed", e.message);
       }
     }
   };
@@ -85,17 +91,13 @@ export default function LoginScreen() {
   const googleSignIn = async () => {
     try {
       const response = await GoogleLogin();
-
-      // retrieve user data
       const { idToken, user } = response.data ?? {};
       if (!idToken) {
         throw new Error("No idToken received");
-        // await loginWithGoogle(idToken); // Server call to validate the token & process the user data for signing In
       }
       loginWithGoogle(idToken);
       router.replace("/(tabs)");
     } catch (error:any) {
-      console.error("❌ Google Sign-In Error:", error);
       Alert.alert("Google Login Failed", error.message);
     }
   };

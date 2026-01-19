@@ -99,6 +99,7 @@
 
 
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import {
   Image,
   StyleSheet,
@@ -108,6 +109,7 @@ import {
 } from "react-native";
 
 export default function HomeScreen() {
+  const router = useRouter();
   return (
     <LinearGradient colors={["#EAF6EF", "#FFFFFF"]} style={styles.container}>
       {/* HEADER */}
@@ -124,7 +126,7 @@ export default function HomeScreen() {
 
       {/* MAIN ACTIONS */}
       <View style={styles.cards}>
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push("/scan")}>
           <Text style={styles.cardTitle}>📸 Scan Your Face</Text>
           <Text style={styles.cardText}>
             Get instant skin analysis using AI
