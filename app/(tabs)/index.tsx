@@ -1,210 +1,224 @@
-// import { Image } from 'expo-image';
-// import { Platform, StyleSheet } from 'react-native';
-
-// import { HelloWave } from '@/components/hello-wave';
-// import ParallaxScrollView from '@/components/parallax-scroll-view';
-// import { ThemedText } from '@/components/themed-text';
-// import { ThemedView } from '@/components/themed-view';
-// import { Link } from 'expo-router';
-
-// export default function HomeScreen() {
-//   return (
-//     <ParallaxScrollView
-//       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-//       headerImage={
-//         <Image
-//           source={require('@/assets/images/partial-react-logo.png')}
-//           style={styles.reactLogo}
-//         />
-//       }>
-//       <ThemedView style={styles.titleContainer}>
-//         <ThemedText type="title">Welcome!</ThemedText>
-//         <HelloWave />
-//       </ThemedView>
-//       <ThemedView style={styles.stepContainer}>
-//         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-//         <ThemedText>
-//           Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-//           Press{' '}
-//           <ThemedText type="defaultSemiBold">
-//             {Platform.select({
-//               ios: 'cmd + d',
-//               android: 'cmd + m',
-//               web: 'F12',
-//             })}
-//           </ThemedText>{' '}
-//           to open developer tools.
-//         </ThemedText>
-//       </ThemedView>
-//       <ThemedView style={styles.stepContainer}>
-//         <Link href="/modal">
-//           <Link.Trigger>
-//             <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-//           </Link.Trigger>
-//           <Link.Preview />
-//           <Link.Menu>
-//             <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-//             <Link.MenuAction
-//               title="Share"
-//               icon="square.and.arrow.up"
-//               onPress={() => alert('Share pressed')}
-//             />
-//             <Link.Menu title="More" icon="ellipsis">
-//               <Link.MenuAction
-//                 title="Delete"
-//                 icon="trash"
-//                 destructive
-//                 onPress={() => alert('Delete pressed')}
-//               />
-//             </Link.Menu>
-//           </Link.Menu>
-//         </Link>
-
-//         <ThemedText>
-//           {`Tap the Explore tab to learn more about what's included in this starter app.`}
-//         </ThemedText>
-//       </ThemedView>
-//       <ThemedView style={styles.stepContainer}>
-//         <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-//         <ThemedText>
-//           {`When you're ready, run `}
-//           <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-//           <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-//           <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-//           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-//         </ThemedText>
-//       </ThemedView>
-//     </ParallaxScrollView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   titleContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: 8,
-//   },
-//   stepContainer: {
-//     gap: 8,
-//     marginBottom: 8,
-//   },
-//   reactLogo: {
-//     height: 178,
-//     width: 290,
-//     bottom: 0,
-//     left: 0,
-//     position: 'absolute',
-//   },
-// });
-
-
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
+
   return (
-    <LinearGradient colors={["#EAF6EF", "#FFFFFF"]} style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
+    <View style={styles.container}>
+      {/* HEADER — SafeArea applied ONLY here */}
+      <View style={[styles.header, { paddingTop: insets.top + 2 }]}>
         <Image
           source={require("@/assets/images/cropped.png")}
           style={styles.logo}
         />
-        <Text style={styles.greeting}>Welcome 👋</Text>
-        <Text style={styles.subtitle}>
-          Let’s take care of your skin today
+
+        <View style={styles.headerRight}>
+          <Ionicons name="notifications-outline" size={22} />
+          <Ionicons name="heart-outline" size={22} />
+          <Ionicons name="bag-handle-outline" size={22} />
+        </View>
+      </View>
+
+      {/* SEARCH — tightly under header */}
+      <TouchableOpacity style={styles.searchBar}>
+        <Ionicons name="search" size={18} color="#999" />
+        <Text style={styles.searchText}>
+          Search skin concerns, products
         </Text>
-      </View>
+      </TouchableOpacity>
 
-      {/* MAIN ACTIONS */}
-      <View style={styles.cards}>
-        <TouchableOpacity style={styles.card} onPress={() => router.push("/scan")}>
-          <Text style={styles.cardTitle}>📸 Scan Your Face</Text>
-          <Text style={styles.cardText}>
-            Get instant skin analysis using AI
+      {/* CONTENT */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+      >
+        <LinearGradient colors={["#EAF7EC", "#FFFFFF"]} style={styles.hero}>
+          <Text style={styles.heroTitle}>AI Skin Analysis</Text>
+          <Text style={styles.heroSubtitle}>
+            Scan your face & get personalized care
           </Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>🧴 Skin Routine</Text>
-          <Text style={styles.cardText}>
-            Personalized daily skin care plan
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.heroButton}
+            onPress={() => router.push("/scan")}
+          >
+            <Text style={styles.heroButtonText}>Scan Now →</Text>
+          </TouchableOpacity>
+        </LinearGradient>
 
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>🛒 Recommended Products</Text>
-          <Text style={styles.cardText}>
-            Products matched to your skin type
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
+          {/* CATEGORY */}
+          <View style={styles.categoryRow}>
+           {[
+             { label: "Scan", emoji: "📸", route: "/scan" },
+             { label: "Skin", emoji: "✨" },
+             { label: "Routine", emoji: "🧴" },
+             { label: "Products", emoji: "🛍️" },
+             { label: "Tips", emoji: "💡" },
+           ].map((item, index) => (
+             <TouchableOpacity
+               key={index}
+               style={styles.categoryItem}
+               onPress={() => item.route && router.push(item.route)}
+             >
+               <Text style={styles.categoryEmoji}>{item.emoji}</Text>
+               <Text style={styles.categoryText}>{item.label}</Text>
+             </TouchableOpacity>
+           ))}
+         </View>
+         {/* RECOMMENDED */}
+         <View style={styles.section}>
+           <Text style={styles.sectionTitle}>Recommended for you</Text>
+
+           <View style={styles.recoCard}>
+             <Text style={styles.recoTitle}>Daily Skin Routine</Text>
+             <Text style={styles.recoText}>
+               Personalized routine based on your scan
+             </Text>
+           </View>
+
+           <View style={styles.recoCard}>
+             <Text style={styles.recoTitle}>Product Matches</Text>
+             <Text style={styles.recoText}>
+               Best products for your skin type
+             </Text>
+           </View>
+         </View>
+      </ScrollView>
+    </View>
   );
 }
-
-/* =========================
-   STYLES
-========================= */
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    backgroundColor: "#FFFFFF",
   },
 
   header: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 40,
-    marginBottom: 30,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+  },
+
+  categoryItem: {
+    alignItems: "center",
+    width: 60,
+  },
+
+  categoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginHorizontal: 24,
+    marginVertical: 16,
+  },
+
+  categoryEmoji: {
+    fontSize: 26,
+  },
+
+  categoryText: {
+    marginTop: 6,
+    fontSize: 12,
   },
 
   logo: {
-    width: 64,
-    height: 64,
+    width: 105,
+    height: 50,
+    resizeMode: "contain",
+  },
+
+  headerRight: {
+    flexDirection: "row",
+    gap: 18,
+  },
+
+  section: {
+    paddingHorizontal: 16,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
     marginBottom: 12,
   },
 
-  greeting: {
-    fontSize: 24,
+  recoCard: {
+    backgroundColor: "#F9F9F9",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+
+  recoTitle: {
+    fontSize: 15,
     fontWeight: "600",
+  },
+
+  recoText: {
+    marginTop: 4,
+    fontSize: 13,
+    color: "#666",
+  },
+
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginTop: 2,          // 🔥 tight
+    marginBottom: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#F4F4F4",
+    borderRadius: 30,
+    gap: 10,
+  },
+
+  searchText: {
+    color: "#999",
+    fontSize: 14,
+  },
+
+  scroll: {
+    paddingBottom: 16,
+  },
+
+  hero: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    padding: 20,
+    borderRadius: 20,
+  },
+
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: "700",
     color: "#2E7D32",
   },
 
-  subtitle: {
+  heroSubtitle: {
     marginTop: 6,
     fontSize: 14,
-    color: "#6B8F71",
+    color: "#555",
   },
 
-  cards: {
-    gap: 16,
+  heroButton: {
+    marginTop: 16,
+    backgroundColor: "#2E7D32",
+    paddingVertical: 12,
+    borderRadius: 24,
+    alignItems: "center",
   },
 
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 20,
-    elevation: 4,
-  },
-
-  cardTitle: {
-    fontSize: 16,
+  heroButtonText: {
+    color: "#fff",
     fontWeight: "600",
-    color: "#2C2C2C",
-  },
-
-  cardText: {
-    marginTop: 6,
-    fontSize: 13,
-    color: "#777",
   },
 });
+

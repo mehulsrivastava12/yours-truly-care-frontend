@@ -104,7 +104,7 @@ export default function LoginScreen() {
 
   async function loginWithGoogle(idToken: string) {
     try {
-      const res = await fetch("http://192.168.29.17:8080/api/auth/google", {
+      const res = await fetch(`${API_BASE_URL}/auth/google`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

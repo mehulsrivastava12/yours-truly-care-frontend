@@ -1,5 +1,10 @@
 // components/CameraCapture.tsx
+import AnalyzingOverlay from "@/components/AnalyzingOverlay";
+import { BlurView } from "expo-blur";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
+import * as ImageManipulator from "expo-image-manipulator";
+import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useRef, useState } from "react";
 import {
     ActivityIndicator,
@@ -12,6 +17,7 @@ import {
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL!;
 
 export default function CameraCapture() {
+  const router = useRouter();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [facing] = useState<CameraType>("front");
@@ -35,55 +41,73 @@ export default function CameraCapture() {
   }
 
   // 📸 TAKE PICTURE
-  const takePicture = async () => {
+    const takePicture = async () => {
     if (!cameraRef.current) return;
 
     const photo = await cameraRef.current.takePictureAsync({
-      quality: 0.8,
-      skipProcessing: true,
+        quality: 0.8,
+        skipProcessing: true,
     });
 
-    setPhotoUri(photo.uri);
-  };
+    // 🔁 UN-MIRROR IMAGE (horizontal flip)
+    const fixedImage = await ImageManipulator.manipulateAsync(
+        photo.uri,
+        [{ flip: ImageManipulator.FlipType.Horizontal }],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+    );
+
+    setPhotoUri(fixedImage.uri);
+    };
+
 
   // 🔁 RETAKE
   const retakePicture = () => {
     setPhotoUri(null);
   };
 
-  // ⬆️ UPLOAD IMAGE
-  const uploadImage = async () => {
-    if (!photoUri) return;
+const uploadImage = async () => {
+  if (!photoUri) return;
 
-    setUploading(true);
+  setUploading(true); // 🔥 trigger blur + overlay
 
-    const formData = new FormData();
-    formData.append("image", {
-      uri: photoUri,
-      name: "face.jpg",
-      type: "image/jpeg",
-    } as any);
+  const formData = new FormData();
+  formData.append("image", {
+    uri: photoUri,
+    name: "face.jpg",
+    type: "image/jpeg",
+  } as any);
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/scan`, {
-        method: "POST",
-        body: formData,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+  const token = await SecureStore.getItemAsync("auth_token");
 
-      const data = await res.json();
-      console.log("API RESPONSE:", data);
-      alert("Image uploaded successfully!");
+  try {
+    const res = await fetch(`${API_BASE_URL}/scan`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    } catch (error) {
-      console.error(error);
-      alert("Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
+    if (!res.ok) throw new Error("Scan failed");
+
+    const data = await res.json();
+
+    // ✅ Navigate AFTER analysis
+    router.replace({
+      pathname: "/scan-result",
+      params: {
+        result: JSON.stringify(data),
+      },
+    });
+
+  } catch (error) {
+    console.error(error);
+    alert("Image upload or analysis failed");
+    setUploading(false);
+  }
+};
+
+
 
   return (
     <View style={styles.container}>
@@ -107,12 +131,33 @@ export default function CameraCapture() {
       ) : (
         <>
           {/* IMAGE PREVIEW */}
-          <Image source={{ uri: photoUri }} style={styles.preview} />
+          {/* <Image source={{ uri: photoUri }} style={styles.preview} /> */}
+            <View style={{ flex: 1 }}>
+            <Image source={{ uri: photoUri }} style={styles.preview} />
+
+            {uploading && (
+                <>
+                {/* 🌫 Blur image */}
+                <BlurView
+                    intensity={70}
+                    tint="dark"
+                    style={StyleSheet.absoluteFill}
+                />
+
+                {/* 🌑 Dark overlay for contrast */}
+                <View style={styles.dimOverlay} />
+
+                {/* 🔍 Fullscreen scanning animation */}
+                <AnalyzingOverlay />
+                </>
+            )}
+            </View>
 
           <View style={styles.actionRow}>
             <TouchableOpacity
               style={[styles.actionButton, styles.retake]}
               onPress={retakePicture}
+            //   disabled={uploading}
             >
               <Text style={styles.actionText}>Retake</Text>
             </TouchableOpacity>
@@ -125,7 +170,7 @@ export default function CameraCapture() {
               {uploading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.actionText}>Upload</Text>
+                  <Text style={styles.actionText}>{uploading ? "Analyzing..." : "Upload"}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -144,6 +189,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000",
   },
+
+dimOverlay: {
+  ...StyleSheet.absoluteFillObject,
+  backgroundColor: "rgba(0,0,0,0.25)",
+},
 
   camera: {
     flex: 1,
