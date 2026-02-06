@@ -1,7 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL!;
 
@@ -20,9 +20,9 @@ export default async function ScanHistoryScreen() {
   return (
     <LinearGradient colors={["#EAF6EF", "#FFFFFF"]} style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => router.push("/account")}>
+        {/* <TouchableOpacity onPress={() => router.push("/account")}>
   <Text>←</Text>
-</TouchableOpacity>
+</TouchableOpacity> */}
 
         <Text style={styles.pageTitle}>Your Scan History</Text>
 

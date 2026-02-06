@@ -75,22 +75,54 @@ useEffect(() => {
   };
 
 
-  const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permission required", "Please allow access to photos.");
-      return;
-    }
+const pickImage = async () => {
+  Alert.alert("Profile Picture", "Choose an option", [
+    {
+      text: "Camera",
+      onPress: async () => {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert("Permission required", "Please allow camera access.");
+          return;
+        }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
+        const result = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.7,
+        });
 
-    if (!result.canceled) setImage(result.assets[0].uri);
-  };
+        if (!result.canceled) setImage(result.assets[0].uri);
+      },
+    },
+    {
+      text: "Gallery",
+      onPress: async () => {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert("Permission required", "Please allow gallery access.");
+          return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.7,
+        });
+
+        if (!result.canceled) setImage(result.assets[0].uri);
+      },
+    },
+    {
+      text: "Remove",
+      onPress: () => handleRemoveImage(),
+      style: "destructive",
+    },
+    { text: "Cancel", style: "cancel" },
+  ]);
+};
+
 
   const handleUpdate = async () => {
     try {
@@ -118,7 +150,7 @@ useEffect(() => {
         } as any);
       }
 
-      const res = await fetch(`${API_BASE_URL}/users/profile`, {
+      const res = await fetch(`${API_BASE_URL}/updateProfile`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -137,6 +169,29 @@ useEffect(() => {
       setLoading(false);
     }
   };
+
+const handleRemoveImage = async () => {
+  console.log("Inside handleRemoveImage")
+  try {
+    const token = await SecureStore.getItemAsync("auth_token");
+    if (!token) return;
+
+    const res = await fetch(`${API_BASE_URL}/delete/profileImage`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) throw new Error("Failed to remove image");
+    setImage(null);
+    // Alert.alert("Success", "Profile picture removed");
+  } catch (err) {
+    console.log(err);
+    // Alert.alert("Error", "Could not remove profile picture");
+  }
+};
+
 
   return (
   // <KeyboardAvoidingView
@@ -166,7 +221,7 @@ useEffect(() => {
         </TouchableOpacity>
 
         <TouchableOpacity onPress={pickImage}>
-          <Text style={styles.addPhoto}>Add Profile Picture</Text>
+          <Text style={styles.addPhoto}>{image ? "Change Profile Picture" : "Add Profile Picture"}</Text>
         </TouchableOpacity>
       </View>
 

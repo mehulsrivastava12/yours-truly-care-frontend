@@ -3,15 +3,16 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL!;
 
 export default function AccountScreen() {
   const router = useRouter();
   const [enabled, setEnabled] = useState(false);
-
+  const [user, setUser] = useState<{ name?: string; email?: string; imageData?: string }>({});
   useEffect(() => {
     loadSetting();
+    loadProfile();
   }, []);
 
 
@@ -19,6 +20,24 @@ export default function AccountScreen() {
     const saved = await SecureStore.getItemAsync("notifications_enabled");
     if (saved !== null) setEnabled(saved === "true");
   };
+
+    const loadProfile = async () => {
+    const token = await SecureStore.getItemAsync("auth_token");
+    try {
+      const res = await fetch(`${API_BASE_URL}/getProfile`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      const data = await res.json();
+      setUser(data); // { name, email, avatar? }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   const toggleNotifications = async (value: boolean) => {
     if (value) {
@@ -38,7 +57,7 @@ export default function AccountScreen() {
     const token = await SecureStore.getItemAsync("auth_token");
   
     try {
-      const res = await fetch(`${API_BASE_URL}/history/1`, {
+      const res = await fetch(`${API_BASE_URL}/history`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -63,11 +82,16 @@ export default function AccountScreen() {
     }
   };
 
+  const getInitial = () => {
+    if (user.name && user.name.length > 0) return user.name[0].toUpperCase();
+    if (user.email && user.email.length > 0) return user.email[0].toUpperCase();
+  };
+
     const getProfileDetails = async () => {
     const token = await SecureStore.getItemAsync("auth_token");
   
     try {
-      const res = await fetch(`${API_BASE_URL}/profile`, {
+      const res = await fetch(`${API_BASE_URL}/getProfile`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -95,12 +119,17 @@ export default function AccountScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Hey Mehul 👋</Text>
+          <Text style={styles.greeting}>Hey {user.name?.split(" ")[0]} 👋</Text>
           <Text style={styles.subText}>Welcome back</Text>
         </View>
 
         <View style={styles.avatar}>
-          <Text style={{color:"#fff", fontWeight:"700"}}>M</Text>
+          <Text style={{color:"#fff", fontWeight:"700"}}>
+            {user.imageData ? (
+            <Image source={{ uri: `data:image/jpeg;base64,${user.imageData}` }} style={styles.image} />
+          ) : (
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 18 }}>{getInitial()}</Text>
+          )}</Text>
         </View>
       </View>
 
@@ -204,9 +233,14 @@ const styles = StyleSheet.create({
     borderRadius:26,
     backgroundColor:"#FAB0AF",
     alignItems:"center",
+    overflow: "hidden",
     justifyContent:"center"
   },
-
+  image: {
+    width: "100%", // fill the parent
+    height: "100%", // fill the parent
+    resizeMode: "cover", // maintain aspect ratio and cover the circle
+  },
   card:{
     backgroundColor:"#fff",
     padding:18,
