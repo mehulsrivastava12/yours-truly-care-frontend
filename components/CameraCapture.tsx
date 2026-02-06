@@ -66,7 +66,9 @@ export default function CameraCapture() {
   };
 
 const uploadImage = async () => {
-  if (!photoUri) return;
+  if (!photoUri) {
+    return;
+}
 
   setUploading(true); // 🔥 trigger blur + overlay
 
@@ -91,6 +93,7 @@ const uploadImage = async () => {
     if (!res.ok) throw new Error("Scan failed");
 
     const data = await res.json();
+    console.log("DATA",data)
 
     // ✅ Navigate AFTER analysis
     router.replace({

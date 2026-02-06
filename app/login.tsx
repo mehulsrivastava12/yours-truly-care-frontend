@@ -1,7 +1,7 @@
 import { sendOtpApi } from "@/app/utils/api";
-import {
-  GoogleSignin
-} from '@react-native-google-signin/google-signin';
+// import {
+//   GoogleSignin
+// } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -24,13 +24,13 @@ export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL!;
 
 WebBrowser.maybeCompleteAuthSession();
 
-GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  scopes: ['profile', 'email'], // what API you want to access on behalf of the user, default is email and profile
-  offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
-  forceCodeForRefreshToken: false,
-  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-});
+// GoogleSignin.configure({
+//   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+//   scopes: ['profile', 'email'], // what API you want to access on behalf of the user, default is email and profile
+//   offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
+//   forceCodeForRefreshToken: false,
+//   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+// });
 
 
 export default function LoginScreen() {

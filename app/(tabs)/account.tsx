@@ -1,112 +1,266 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from '@/components/ui/collapsible';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { Ionicons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications";
+import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL!;
 
 export default function AccountScreen() {
+  const router = useRouter();
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    loadSetting();
+  }, []);
+
+
+  const loadSetting = async () => {
+    const saved = await SecureStore.getItemAsync("notifications_enabled");
+    if (saved !== null) setEnabled(saved === "true");
+  };
+
+  const toggleNotifications = async (value: boolean) => {
+    if (value) {
+      const { status } = await Notifications.requestPermissionsAsync();
+
+      if (status !== "granted") {
+        alert("Notification permission denied");
+        return;
+      }
+    }
+
+    setEnabled(value);
+    await SecureStore.setItemAsync("notifications_enabled", String(value));
+  };
+
+  const getScanHistory = async () => {
+    const token = await SecureStore.getItemAsync("auth_token");
+  
+    try {
+      const res = await fetch(`${API_BASE_URL}/history/1`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!res.ok) throw new Error("Scan failed");
+  
+      const data = await res.json();
+      console.log("DATA",data)
+  
+      // ✅ Navigate AFTER analysis
+      router.push({
+        pathname: "/history",
+        params: {
+          result: JSON.stringify(data),
+        },
+      });
+  
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+    const getProfileDetails = async () => {
+    const token = await SecureStore.getItemAsync("auth_token");
+  
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const data = await res.json();
+      console.log("DATA",data)
+  
+      // ✅ Navigate AFTER analysis
+      router.push({
+        pathname: "/ProfileScreen",
+        params: {
+          result: JSON.stringify(data),
+        },
+      });
+  
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      
+      {/* HEADER */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Hey Mehul 👋</Text>
+          <Text style={styles.subText}>Welcome back</Text>
+        </View>
+
+        <View style={styles.avatar}>
+          <Text style={{color:"#fff", fontWeight:"700"}}>M</Text>
+        </View>
+      </View>
+
+      {/* MEMBERSHIP CARD */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Become a Glow Member ✨</Text>
+        <Text style={styles.cardSubtitle}>
+          Earn rewards every time you shop
+        </Text>
+
+        <TouchableOpacity>
+          <Text style={styles.link}>Unlock Benefits →</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* QUICK ACTIONS */}
+      <View style={styles.section}>
+        <MenuItem icon="cube-outline" title="Orders" subtitle="Track, return or cancel orders" />
+        <MenuItem icon="wallet-outline" title="Wallet" subtitle="Check your balance" />
+        <MenuItem icon="scan-outline" title="Skin Profile" subtitle="View AI skin reports" onPress={() => router.push("/scan")}/>
+        <MenuItem icon="time-outline" title="Scan History" subtitle="See past scans & progress"  onPress={getScanHistory}/>
+
+        {/* Toggle */}
+        <View style={styles.menuRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.menuTitle}>Notifications</Text>
+            <Text style={styles.menuSubtitle}>Get offers & scan reminders</Text>
+          </View>
+
+          <Switch value={enabled} onValueChange={toggleNotifications}   trackColor={{ false: "#FAB0AF", true: "#A5D6A7" }}  // grey → soft green
+  thumbColor={enabled ? "#2E7D32" : "#ffffff"} ios_backgroundColor="#f7d0dd" />
+        </View>
+      </View>
+
+      {/* SETTINGS */}
+      <Text style={styles.sectionHeader}>Settings</Text>
+
+      <View style={styles.section}>
+        <MenuItem icon="location-outline" title="Addresses" subtitle="Manage saved addresses" />
+        <MenuItem icon="card-outline" title="Payment Methods" subtitle="Manage cards & UPI" />
+        <MenuItem icon="person-outline" title="Profile Settings" subtitle="Edit profile details" onPress={getProfileDetails} />
+      </View>
+
+      {/* FOOTER */}
+      <Text style={styles.sectionHeader}>More</Text>
+
+      <View style={styles.section}>
+        <MenuItem icon="lock-closed-outline" title="Privacy Policy" />
+        <MenuItem icon="document-text-outline" title="Terms & Conditions" />
+        <MenuItem icon="information-circle-outline" title="About YourTrulyCare" />
+      </View>
+
+      <View style={{height:50}} />
+    </ScrollView>
   );
 }
 
+const MenuItem = ({ icon, title, subtitle, onPress }: any) => (
+  <TouchableOpacity style={styles.menuRow} onPress={onPress}>
+    <Ionicons name={icon} size={22} color="#444" />
+
+    <View style={{marginLeft:14, flex:1}}>
+      <Text style={styles.menuTitle}>{title}</Text>
+      {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
+    </View>
+
+    <Ionicons name="chevron-forward" size={18} color="#999" />
+  </TouchableOpacity>
+);
+
+
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+
+  container:{
+    flex:1,
+    backgroundColor:"#F7F8FA",
+    padding:18
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+
+  header:{
+    flexDirection:"row",
+    justifyContent:"space-between",
+    alignItems:"center",
+    marginTop:20,
+    marginBottom:20
   },
+
+  greeting:{
+    fontSize:26,
+    fontWeight:"700"
+  },
+
+  subText:{
+    color:"#777",
+    marginTop:4
+  },
+
+  avatar:{
+    height:52,
+    width:52,
+    borderRadius:26,
+    backgroundColor:"#FAB0AF",
+    alignItems:"center",
+    justifyContent:"center"
+  },
+
+  card:{
+    backgroundColor:"#fff",
+    padding:18,
+    borderRadius:16,
+    marginBottom:22,
+    elevation:3
+  },
+
+  cardTitle:{
+    fontSize:16,
+    fontWeight:"700"
+  },
+
+  cardSubtitle:{
+    marginTop:4,
+    color:"#777"
+  },
+
+  link:{
+    marginTop:10,
+    color:"#6C63FF",
+    fontWeight:"600"
+  },
+
+  section:{
+    backgroundColor:"#fff",
+    borderRadius:16,
+    paddingVertical:6,
+    marginBottom:22
+  },
+
+  sectionHeader:{
+    fontWeight:"700",
+    marginBottom:10,
+    marginLeft:4,
+    color:"#555"
+  },
+
+  menuRow:{
+    flexDirection:"row",
+    alignItems:"center",
+    padding:16,
+    borderBottomWidth:0.5,
+    borderColor:"#eee"
+  },
+
+  menuTitle:{
+    fontWeight:"600"
+  },
+
+  menuSubtitle:{
+    color:"#777",
+    fontSize:12,
+    marginTop:2
+  }
+
 });

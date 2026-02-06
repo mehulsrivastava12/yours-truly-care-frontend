@@ -1,7 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
@@ -11,26 +10,6 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* HEADER — SafeArea applied ONLY here */}
-      <View style={[styles.header, { paddingTop: insets.top + 2 }]}>
-        <Image
-          source={require("@/assets/images/cropped.png")}
-          style={styles.logo}
-        />
-
-        <View style={styles.headerRight}>
-          <Ionicons name="notifications-outline" size={22} />
-          <Ionicons name="heart-outline" size={22} />
-          <Ionicons name="bag-handle-outline" size={22} />
-        </View>
-      </View>
-
-      {/* SEARCH — tightly under header */}
-      <TouchableOpacity style={styles.searchBar}>
-        <Ionicons name="search" size={18} color="#999" />
-        <Text style={styles.searchText}>
-          Search skin concerns, products
-        </Text>
-      </TouchableOpacity>
 
       {/* CONTENT */}
       <ScrollView
@@ -186,7 +165,7 @@ const styles = StyleSheet.create({
   },
 
   scroll: {
-    paddingBottom: 16,
+    // paddingBottom: 16,
   },
 
   hero: {
